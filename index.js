@@ -228,6 +228,9 @@ io.on("connection", function (socket)
     });
 });
 
+const Queue = require("./helpers/queue");
+const messageQueue = new Queue();
+
 app.post("/send-message", async (req, res) =>
 {
     const sender    = req.body.sender;
@@ -244,34 +247,32 @@ app.post("/send-message", async (req, res) =>
         });
     }
 
-    const isRegisteredNumber = await client.isRegisteredUser(number);
+    messageQueue.enqueue(async () => {
+        console.log(`Processing message for ${number}...`);
+        
+        // Check registration inside the worker to avoid blocking response
+        const isRegisteredNumber = await client.isRegisteredUser(number);
+        if (!isRegisteredNumber) {
+            console.log(`Failed to send to ${number}: Number not registered`);
+            return;
+        }
 
-    if (!isRegisteredNumber)
-    {
-        return res.status(422).json({
-            status: false,
-            message: "The number is not registered",
-        });
-    }
+        const delay = Math.floor(Math.random() * (10000 - 5000 + 1) + 5000);
+        console.log(`Delaying for ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
 
-    const delay = Math.floor(Math.random() * (10000 - 5000 + 1) + 5000);
-    await new Promise(resolve => setTimeout(resolve, delay));
+        try {
+            const response = await client.sendMessage(number, message);
+            console.log(`Message sent to ${number}`);
+        } catch (err) {
+            console.error(`Failed to send message to ${number}:`, err);
+        }
+    });
 
-    client.sendMessage(number, message)
-        .then((response) =>
-        {
-            res.status(200).json({
-                status: true,
-                response: response,
-            });
-        })
-        .catch((err) =>
-        {
-            res.status(500).json({
-                status: false,
-                response: err,
-            });
-        });
+    res.status(200).json({
+        status: true,
+        message: "Message added to queue",
+    });
 });
 
 app.post("/send-media", async (req, res) =>
