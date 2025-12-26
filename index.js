@@ -121,6 +121,11 @@ const createSession = function (id, description)
 
         qrcode.toDataURL(qr, (err, url) =>
         {
+            if (err) {
+                console.error("Error generating QR code:", err);
+                return;
+            }
+            console.log("QR Code generated for session:", id);
             io.emit("qr", { id: id, src: url });
             io.emit("message", { id: id, text: "QR Code received, scan please!" });
         });
@@ -249,8 +254,10 @@ app.post("/send-message", async (req, res) =>
         });
     }
 
-    client
-        .sendMessage(number, message)
+    const delay = Math.floor(Math.random() * (10000 - 5000 + 1) + 5000);
+    await new Promise(resolve => setTimeout(resolve, delay));
+
+    client.sendMessage(number, message)
         .then((response) =>
         {
             res.status(200).json({
