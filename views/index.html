@@ -209,7 +209,10 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
         <script>
             $(document).ready(function () {
-                document.getElementById("year").textContent = new Date().getFullYear();
+                const yearElement = document.getElementById("year");
+                if (yearElement) {
+                    yearElement.textContent = new Date().getFullYear();
+                }
 
                 const clientIdCheck = document.getElementById("client-id");
                 clientIdCheck.addEventListener("input", function (event) {
