@@ -111,6 +111,10 @@ const createSession = function (id, description)
         authStrategy: new LocalAuth({
             clientId: id,
         }),
+        webVersionCache: {
+            type: 'remote',
+            remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html',
+        },
     });
 
     client.initialize();
@@ -262,7 +266,7 @@ app.post("/send-message", async (req, res) =>
         await new Promise(resolve => setTimeout(resolve, delay));
 
         try {
-            const response = await client.sendMessage(number, message);
+            const response = await client.sendMessage(number, message, { sendSeen: false });
             console.log(`Message sent to ${number}`);
         } catch (err) {
             console.error(`Failed to send message to ${number}:`, err);
@@ -314,7 +318,7 @@ app.post("/send-media", async (req, res) =>
     const media = new MessageMedia(mimetype, attachment, "Lampiran Berkas");
 
     client
-        .sendMessage(number, media, { caption: caption })
+        .sendMessage(number, media, { caption: caption, sendSeen: false })
         .then((response) =>
         {
             res.status(200).json({
@@ -411,7 +415,7 @@ app.post("/broadcast", async (req, res) =>
 
                     const media = new MessageMedia(mimetype, attachment, "Lampiran Berkas");
 
-                    await client.sendMessage(formattedNumber, media, { caption: message });
+                    await client.sendMessage(formattedNumber, media, { caption: message, sendSeen: false });
 
                     results.push({
                         number: formattedNumber,
@@ -421,7 +425,7 @@ app.post("/broadcast", async (req, res) =>
                 }
                 else
                 {
-                    await client.sendMessage(formattedNumber, message);
+                    await client.sendMessage(formattedNumber, message, { sendSeen: false });
 
                     results.push({
                         number: formattedNumber,
